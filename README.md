@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PollRoom
+
+A real-time poll web app. Create a poll, share the link, and see votes update live.
+
+## Tech Stack
+
+- Next.js 16 (App Router) with TypeScript
+- Supabase (PostgreSQL + Realtime)
+- Tailwind CSS + shadcn/ui
+- Playwright for end-to-end tests
+
+## Project Structure
+
+```
+app/            Pages and API route handlers
+components/     React components
+hooks/          Custom React hooks
+lib/            Utilities, Supabase clients, types, constants
+e2e/            Playwright end-to-end tests
+proxy.ts        Rate limiting proxy (runs on all API routes)
+```
+
+## API Routes
+
+- `POST /api/polls` -- Create a new poll
+- `GET /api/polls/[id]` -- Get poll details and vote counts
+- `POST /api/polls/[id]/vote` -- Cast a vote
+
+## Database
+
+Three tables in Supabase:
+
+- `polls` -- Stores poll questions
+- `options` -- Stores poll options (linked to a poll)
+- `votes` -- Stores individual votes with fingerprint and IP deduplication
 
 ## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Copy `.env.example` to `.env.local` and fill in your Supabase credentials.
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Run the dev server:
+   ```
+   npm run dev
+   ```
+4. Run tests:
+   ```
+   npm test
+   ```
