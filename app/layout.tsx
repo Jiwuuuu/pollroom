@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "PollRoom — Real-Time Polls",
@@ -49,6 +50,8 @@ export default function RootLayout({
         </footer>
 
         <Toaster position="bottom-center" richColors />
+
+        <Analytics/>
       </body>
     </html>
   );
