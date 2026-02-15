@@ -20,3 +20,10 @@ export const BASE_URL =
   (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000");
+
+/** Allowed HTTP methods for API endpoints */
+export const ALLOWED_METHODS = {
+  polls: ["POST"],
+  pollById: ["GET"],
+  vote: ["POST"],
+} as const;

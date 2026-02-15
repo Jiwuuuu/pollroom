@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { VOTER_COOKIE_NAME, VOTER_COOKIE_MAX_AGE } from "@/lib/constants";
+import { isValidUUID, isJsonContentType } from "@/lib/validation";
 import type { CastVoteResponse, ApiError } from "@/lib/types";
 
 /**
@@ -34,13 +35,46 @@ export async function POST(
 ): Promise<NextResponse<CastVoteResponse | ApiError>> {
   try {
     const { id: pollId } = await params;
-    const body = await request.json();
+
+    // ── UUID format validation ──────────────────────────
+    if (!isValidUUID(pollId)) {
+      return NextResponse.json(
+        { error: "Invalid poll ID format" },
+        { status: 400 }
+      );
+    }
+
+    // ── Content-Type check ──────────────────────────────
+    if (!isJsonContentType(request)) {
+      return NextResponse.json(
+        { error: "Content-Type must be application/json" },
+        { status: 415 }
+      );
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
     const { optionId } = body;
 
     // ── Validation ──────────────────────────────────────
-    if (!optionId) {
+    if (typeof optionId !== "string" || !optionId) {
       return NextResponse.json(
         { error: "Option ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidUUID(optionId)) {
+      return NextResponse.json(
+        { error: "Invalid option ID format" },
         { status: 400 }
       );
     }

@@ -1,24 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { MIN_OPTIONS, MAX_OPTIONS, BASE_URL } from "@/lib/constants";
+import { MAX_QUESTION_LENGTH, MAX_OPTION_LENGTH, isJsonContentType } from "@/lib/validation";
 import type { CreatePollRequest, CreatePollResponse, ApiError } from "@/lib/types";
 
 export async function POST(request: NextRequest): Promise<NextResponse<CreatePollResponse | ApiError>> {
   try {
-    const body: CreatePollRequest = await request.json();
+    // ── Content-Type check ──────────────────────────────
+    if (!isJsonContentType(request)) {
+      return NextResponse.json(
+        { error: "Content-Type must be application/json" },
+        { status: 415 }
+      );
+    }
+
+    let body: CreatePollRequest;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
     const { question, options } = body;
 
     // ── Validation ──────────────────────────────────────
-    const trimmedQuestion = question?.trim();
+    if (typeof question !== "string") {
+      return NextResponse.json({ error: "Question must be a string" }, { status: 400 });
+    }
+
+    const trimmedQuestion = question.trim();
     if (!trimmedQuestion) {
       return NextResponse.json({ error: "Question is required" }, { status: 400 });
     }
 
+    // Server-side length limit
+    if (trimmedQuestion.length > MAX_QUESTION_LENGTH) {
+      return NextResponse.json(
+        { error: `Question must be ${MAX_QUESTION_LENGTH} characters or fewer` },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(options)) {
+      return NextResponse.json(
+        { error: "Options must be an array" },
+        { status: 400 }
+      );
+    }
+
     const trimmedOptions = options
-      ?.map((o: string) => o.trim())
+      .map((o: unknown) => (typeof o === "string" ? o.trim() : ""))
       .filter(Boolean);
 
-    if (!trimmedOptions || trimmedOptions.length < MIN_OPTIONS) {
+    if (trimmedOptions.length < MIN_OPTIONS) {
       return NextResponse.json(
         { error: `At least ${MIN_OPTIONS} options are required` },
         { status: 400 }
@@ -30,6 +67,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreatePol
         { error: `Maximum ${MAX_OPTIONS} options allowed` },
         { status: 400 }
       );
+    }
+
+    // Server-side option length limit
+    for (const opt of trimmedOptions) {
+      if (opt.length > MAX_OPTION_LENGTH) {
+        return NextResponse.json(
+          { error: `Each option must be ${MAX_OPTION_LENGTH} characters or fewer` },
+          { status: 400 }
+        );
+      }
     }
 
     // Check duplicates (case-insensitive)

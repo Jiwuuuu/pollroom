@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isValidUUID } from "@/lib/validation";
 import type { PollResultsResponse, ApiError } from "@/lib/types";
 
 export async function GET(
@@ -8,6 +9,12 @@ export async function GET(
 ): Promise<NextResponse<PollResultsResponse | ApiError>> {
   try {
     const { id } = await params;
+
+    // ── UUID format validation ──────────────────────────
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ error: "Invalid poll ID format" }, { status: 400 });
+    }
+
     const supabase = createServerSupabaseClient();
 
     // ── Fetch poll ──────────────────────────────────────
